@@ -2,19 +2,16 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/nbonair/currency-exchange-server/configs"
 )
 
 type Database struct {
-	Pool  *pgxpool.Pool
-	SQLDB *sql.DB
+	Pool *pgxpool.Pool
 }
 
 func InitializeDB(cfg configs.DatabaseConfig) (*Database, func(), error) {
@@ -32,11 +29,8 @@ func InitializeDB(cfg configs.DatabaseConfig) (*Database, func(), error) {
 		return nil, nil, err
 	}
 
-	sqlDB := stdlib.OpenDBFromPool(pool)
-
 	db := &Database{
-		Pool:  pool,
-		SQLDB: sqlDB,
+		Pool: pool,
 	}
 
 	if err := db.MigrateUp(); err != nil {
@@ -54,9 +48,6 @@ func InitializeDB(cfg configs.DatabaseConfig) (*Database, func(), error) {
 
 // Close closes the database connections.
 func (db *Database) Close() {
-	if db.SQLDB != nil {
-		db.SQLDB.Close()
-	}
 	if db.Pool != nil {
 		db.Pool.Close()
 	}
