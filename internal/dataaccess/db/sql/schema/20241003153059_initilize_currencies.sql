@@ -22,16 +22,25 @@ CREATE TABLE IF NOT EXISTS pivot_currencies (
 
 -- Exchange Rates Table
 CREATE TABLE IF NOT EXISTS exchange_rates (
-    id SERIAL PRIMARY KEY,
-    source_id INT REFERENCES currencies(id) NOT NULL,
-    target_id INT REFERENCES currencies(id) NOT NULL,
-    pivot_id INT REFERENCES currencies(id) NOT NULL,
+    base_currency_id INT REFERENCES currencies(id) NOT NULL,
+    currency_id INT REFERENCES currencies(id) NOT NULL,
     exchange_rate DECIMAL(20,8) NOT NULL,
-    priority INT NOT NULL DEFAULT 1,
-    timestamp TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (base_currency_id, currency_id)
 );
+
+-- Exchange Rates History Table
+CREATE TABLE IF NOT EXISTS exchange_rate_history (
+    id SERIAL PRIMARY KEY,
+    base_currency_id INT REFERENCES currencies(id) NOT NULL,
+    currency_id INT REFERENCES currencies(id) NOT NULL,
+    exchange_rate DECIMAL(20,8) NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
