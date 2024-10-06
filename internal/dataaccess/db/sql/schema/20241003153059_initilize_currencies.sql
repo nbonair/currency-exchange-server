@@ -63,28 +63,21 @@ CREATE TABLE IF NOT EXISTS rate_subscriptions (
 );
 
 -- Indexes for faster querying
-CREATE INDEX idx_from_currency_id ON exchange_rates (source_id);
-CREATE INDEX idx_to_currency_id ON exchange_rates (target_id);
+CREATE INDEX idx_exchange_rates_base_currency_id ON exchange_rates (base_currency_id);
+CREATE INDEX idx_exchange_rates_currency_id ON exchange_rates (currency_id);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 -- Drop indexes
-DROP INDEX IF EXISTS idx_from_currency_id;
-DROP INDEX IF EXISTS idx_to_currency_id;
+DROP INDEX IF EXISTS idx_exchange_rates_base_currency_id;
+DROP INDEX IF EXISTS idx_exchange_rates_currency_id;
 
--- Drop rate_subscriptions table
+-- Drop tables
 DROP TABLE IF EXISTS rate_subscriptions;
-
--- Drop users table
 DROP TABLE IF EXISTS users;
-
--- Drop exchange_rates table
+DROP TABLE IF EXISTS exchange_rate_history;
 DROP TABLE IF EXISTS exchange_rates;
-
--- Drop pivot_currencies table
 DROP TABLE IF EXISTS pivot_currencies;
-
--- Drop currencies table
 DROP TABLE IF EXISTS currencies;
 -- +goose StatementEnd

@@ -18,15 +18,20 @@ type Currency struct {
 }
 
 type ExchangeRate struct {
-	ID           int32
-	SourceID     int32
-	TargetID     int32
-	PivotID      int32
-	ExchangeRate pgtype.Numeric
-	Priority     int32
-	Timestamp    pgtype.Timestamptz
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	BaseCurrencyID int32
+	CurrencyID     int32
+	ExchangeRate   pgtype.Numeric
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+type ExchangeRateHistory struct {
+	ID             int32
+	BaseCurrencyID int32
+	CurrencyID     int32
+	ExchangeRate   pgtype.Numeric
+	Timestamp      pgtype.Timestamptz
+	CreatedAt      pgtype.Timestamptz
 }
 
 type PivotCurrency struct {
