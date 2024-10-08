@@ -5,6 +5,6 @@ sql:
     schema: "internal/dataaccess/db/sql/schema"
     gen:
       go:
-        package: "repo"
-        out: "internal/repo"
+        package: "database"
+        out: "internal/database"
         sql_package: "pgx/v5"

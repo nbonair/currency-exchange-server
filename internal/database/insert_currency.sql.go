@@ -3,7 +3,7 @@
 //   sqlc v1.27.0
 // source: insert_currency.sql
 
-package repo
+package database
 
 import (
 	"context"
