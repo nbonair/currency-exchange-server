@@ -6,6 +6,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/pressly/goose/v3 v3.22.1
 	github.com/spf13/viper v1.19.0
+	github.com/vertica/vertica-sql-go v1.3.3
 )
 
 require (
