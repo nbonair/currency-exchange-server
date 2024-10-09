@@ -5,7 +5,7 @@
 package database
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 type Currency struct {
@@ -13,49 +13,31 @@ type Currency struct {
 	Code          string
 	Name          string
 	DecimalPlaces int32
-	CreatedAt     pgtype.Timestamptz
-	UpdatedAt     pgtype.Timestamptz
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type ExchangeRate struct {
 	BaseCurrencyID int32
 	CurrencyID     int32
-	ExchangeRate   pgtype.Numeric
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
+	ExchangeRate   float64
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type ExchangeRateHistory struct {
 	ID             int32
 	BaseCurrencyID int32
 	CurrencyID     int32
-	ExchangeRate   pgtype.Numeric
-	Timestamp      pgtype.Timestamptz
-	CreatedAt      pgtype.Timestamptz
+	ExchangeRate   float64
+	Timestamp      time.Time
+	CreatedAt      time.Time
 }
 
 type PivotCurrency struct {
 	ID         int32
-	CurrencyID pgtype.Int4
+	CurrencyID int32
 	Priority   int32
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
-}
-
-type RateSubscription struct {
-	ID               int32
-	UserID           pgtype.Int4
-	BaseCurrencyID   pgtype.Int4
-	TargetCurrencyID pgtype.Int4
-	PivotCurrencyID  pgtype.Int4
-	Threshold        pgtype.Numeric
-	NotificationSent pgtype.Bool
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
-}
-
-type User struct {
-	ID        int32
-	Email     string
-	CreatedAt pgtype.Timestamptz
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
