@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,7 +24,7 @@ func InitializeDB(cfg configs.DatabaseConfig) (*Database, func(), error) {
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
-		log.Printf("error connecting to the database: %+v\n", err)
+		fmt.Printf("error connecting to the database: %+v\n", err)
 		return nil, nil, err
 	}
 
@@ -42,7 +41,7 @@ func InitializeDB(cfg configs.DatabaseConfig) (*Database, func(), error) {
 		db.Close()
 	}
 
-	log.Println("Database connection established and migrations applied.")
+	fmt.Println("Database connection established and migrations applied.")
 	return db, cleanup, nil
 }
 
@@ -51,5 +50,5 @@ func (db *Database) Close() {
 	if db.Pool != nil {
 		db.Pool.Close()
 	}
-	log.Println("Database connections closed.")
+	fmt.Println("Database connections closed.")
 }
