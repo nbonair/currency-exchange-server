@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/nbonair/currency-exchange-server/internal/dataaccess/db"
 	"github.com/nbonair/currency-exchange-server/internal/database"
 )
 
@@ -14,19 +14,19 @@ type ExchangeRateRepository interface {
 }
 
 type exchangeRateRepository struct {
-	pool    *pgxpool.Pool
+	db      *db.Database
 	queries *database.Queries
 }
 
-func NewExchangeRateRepository(pool *pgxpool.Pool) ExchangeRateRepository {
+func NewExchangeRateRepository(db *db.Database) ExchangeRateRepository {
 	return &exchangeRateRepository{
-		pool:    pool,
-		queries: database.New(pool),
+		db:      db,
+		queries: database.New(db.Pool),
 	}
 }
 
 func (er *exchangeRateRepository) UpdateExchangeRates(ctx context.Context, baseCurrency string, rates map[string]float64) error {
-	conn, err := er.pool.Acquire(ctx)
+	conn, err := er.db.Pool.Acquire(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to acquire connection: %w", err)
 	}

@@ -5,33 +5,22 @@ import (
 	"log"
 
 	"github.com/nbonair/currency-exchange-server/configs"
-	"github.com/nbonair/currency-exchange-server/internal/dataaccess/db"
-	"github.com/nbonair/currency-exchange-server/internal/handler"
-	"github.com/nbonair/currency-exchange-server/internal/lib/openexchangerates"
-	"github.com/nbonair/currency-exchange-server/internal/repo"
-	"github.com/nbonair/currency-exchange-server/internal/router"
-	"github.com/nbonair/currency-exchange-server/internal/service"
+	"github.com/nbonair/currency-exchange-server/internal/wiring"
 )
 
-func Run(cfg *configs.Config) error {
-	pool, cleanup, err := db.InitializeDB(cfg.Database)
+func Run() error {
+	// Load configuration
+	cfg, err := configs.LoadConfig()
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		fmt.Println("Failed to load configuration: %v", err)
 	}
+
+	r, cleanup, err := wiring.InitializeRouter(cfg.Database, cfg.APIs)
+
+	if err != nil {
+		log.Fatalf("Failed to initialize router: %v", err)
+	}
+
 	defer cleanup()
-
-	exchangeRateRepo := repo.NewExchangeRateRepository(pool.Pool)
-	appID := cfg.APIs.APIKeys["openexchangerates"]
-
-	apiClient, err := openexchangerates.NewOpenExchangeRateClient(appID)
-	if err != nil {
-		fmt.Println("Get External API error")
-	}
-
-	exchangeRateService := service.NewExchangeRateService(exchangeRateRepo, apiClient)
-	exchangeRateHandler := handler.NewExchangeRateHandler(exchangeRateService)
-
-	r := router.SetupRouter(exchangeRateHandler)
-
 	return r.Run(":8080")
 }

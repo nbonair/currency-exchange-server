@@ -5,21 +5,24 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	APIs     APIsConfig
+	Server   ServerConfig   `mapstructure:"server"`
+	Database DatabaseConfig `mapstructure:"database"`
+	APIs     APIsConfig     `mapstructure:"apis"`
 }
 
 type ServerConfig struct {
-	Port string
+	Port string `mapstructure:"port"`
 }
 
 type DatabaseConfig struct {
-	URL string
+	URL                string `mapstructure:"url"`
+	MaxIdleConnections int    `mapstructure:"max_idle_connections"`
+	MaxOpenConnections int    `mapstructure:"max_open_connections"`
+	ConnMaxLifetime    int    `mapstructure:"conn_max_lifetime"`
 }
 
 type APIsConfig struct {
-	APIKeys map[string]string
+	APIKeys map[string]string `mapstructure:"apikeys"`
 }
 
 func LoadConfig() (*Config, error) {

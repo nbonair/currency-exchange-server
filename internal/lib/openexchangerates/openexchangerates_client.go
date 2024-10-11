@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/nbonair/currency-exchange-server/configs"
 )
 
 type OpenExchangeRateClient interface {
@@ -18,7 +20,8 @@ type openExchangeRateClient struct {
 	client  *http.Client
 }
 
-func NewOpenExchangeRateClient(appID string) (OpenExchangeRateClient, error) {
+func NewOpenExchangeRateClient(cfg configs.APIsConfig) (OpenExchangeRateClient, error) {
+	appID := cfg.APIKeys["openexchangerates"]
 	if appID == "" {
 		return nil, fmt.Errorf("OpenExchangeRates API key cannot be empty")
 	}
