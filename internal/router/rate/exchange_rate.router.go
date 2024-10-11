@@ -16,8 +16,6 @@ func NewExchangeRateRouter(handler handler.ExchangeRateHandler) *ExchangeRateRou
 }
 
 func (er *ExchangeRateRouter) InitExchangeRateRouter(Router *gin.RouterGroup) {
-	// exchangeRateRouter := di.InitializeHandler()
-
 	exchangeRateRouterPublic := Router.Group("/exchange-rate")
 	{
 		exchangeRateRouterPublic.GET("/all", er.Handler.GetExchangeRates)
