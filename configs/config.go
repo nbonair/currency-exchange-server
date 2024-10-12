@@ -8,12 +8,15 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
 	APIs     APIsConfig     `mapstructure:"apis"`
+	Redis    CacheConfig    `mapstructure:"redis"`
 }
 
+// Server
 type ServerConfig struct {
 	Port string `mapstructure:"port"`
 }
 
+// Database
 type DatabaseConfig struct {
 	URL                string `mapstructure:"url"`
 	MaxIdleConnections int    `mapstructure:"max_idle_connections"`
@@ -21,6 +24,22 @@ type DatabaseConfig struct {
 	ConnMaxLifetime    int    `mapstructure:"conn_max_lifetime"`
 }
 
+// Cache
+type CacheType string
+
+const (
+	CacheTypeInMemory CacheType = "in_memory"
+	CacheTypeRedis    CacheType = "redis"
+)
+
+type CacheConfig struct {
+	Type     CacheType `mapstructure:"type"`
+	Address  string    `mapstructure:"address"`
+	Username string    `mapstructure:"username"`
+	Password string    `mapstructure:"password"`
+}
+
+// External APIs
 type APIsConfig struct {
 	APIKeys map[string]string `mapstructure:"apikeys"`
 }
