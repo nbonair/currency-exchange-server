@@ -10,6 +10,45 @@ import (
 	"time"
 )
 
+const getExchangeRate = `-- name: GetExchangeRate :one
+SELECT 
+    er.exchange_rate,
+    er.created_at,
+    er.updated_at,
+    bc.code as base_currency_code,
+    tc.code as target_currency_code
+FROM exchange_rates er 
+JOIN currencies bc ON er.base_currency_id = bc.id
+JOIN currencies tc ON er.currency_id = tc.id
+WHERE bc.code = $1  AND tc.code = $2
+`
+
+type GetExchangeRateParams struct {
+	BaseCurrencyCode   string
+	TargetCurrencyCode string
+}
+
+type GetExchangeRateRow struct {
+	ExchangeRate       float64
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	BaseCurrencyCode   string
+	TargetCurrencyCode string
+}
+
+func (q *Queries) GetExchangeRate(ctx context.Context, arg GetExchangeRateParams) (GetExchangeRateRow, error) {
+	row := q.db.QueryRow(ctx, getExchangeRate, arg.BaseCurrencyCode, arg.TargetCurrencyCode)
+	var i GetExchangeRateRow
+	err := row.Scan(
+		&i.ExchangeRate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.BaseCurrencyCode,
+		&i.TargetCurrencyCode,
+	)
+	return i, err
+}
+
 const upsertExchangeRate = `-- name: UpsertExchangeRate :exec
 INSERT INTO exchange_rates(base_currency_id, currency_id, exchange_rate, updated_at)
 VALUES ($1, $2, $3, $4)

@@ -11,6 +11,7 @@ import (
 	"github.com/google/wire"
 	"github.com/nbonair/currency-exchange-server/configs"
 	"github.com/nbonair/currency-exchange-server/internal/dataaccess"
+	"github.com/nbonair/currency-exchange-server/internal/dataaccess/cache"
 	"github.com/nbonair/currency-exchange-server/internal/dataaccess/db"
 	"github.com/nbonair/currency-exchange-server/internal/handler"
 	"github.com/nbonair/currency-exchange-server/internal/lib"
@@ -23,7 +24,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig) (*gin.Engine, func(), error) {
+func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig, cfgCache configs.CacheConfig) (*gin.Engine, func(), error) {
 	database, cleanup, err := db.InitializeDB(cfgDb)
 	if err != nil {
 		return nil, nil, err
@@ -34,7 +35,9 @@ func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig) (
 		cleanup()
 		return nil, nil, err
 	}
-	exchangeRateService := service.NewExchangeRateService(exchangeRateRepository, openExchangeRateClient)
+	client := cache.NewRedisClient(cfgCache)
+	exchangeRateCache := cache.NewExchangeRateCache(client)
+	exchangeRateService := service.NewExchangeRateService(exchangeRateRepository, openExchangeRateClient, exchangeRateCache)
 	exchangeRateHandler := handler.NewExchangeRateHandler(exchangeRateService)
 	exchangeRateRouter := rate.NewExchangeRateRouter(exchangeRateHandler)
 	appRouter := router.NewAppRouter(exchangeRateRouter)

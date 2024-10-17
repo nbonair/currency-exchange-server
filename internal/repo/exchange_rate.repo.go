@@ -5,17 +5,27 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/nbonair/currency-exchange-server/internal/dataaccess/db"
 	"github.com/nbonair/currency-exchange-server/internal/database"
 )
 
 type ExchangeRateRepository interface {
+	GetExchangeRate(ctx context.Context, baseCurrency string, targetCurrent string) (*ExchangeRateDTO, error)
 	UpdateExchangeRates(ctx context.Context, baseCurrency string, rates map[string]float64) error
 }
 
 type exchangeRateRepository struct {
 	db      *db.Database
 	queries *database.Queries
+}
+
+type ExchangeRateDTO struct {
+	BaseCurrencyCode   string    `json:"base_currency_code"`
+	TargetCurrencyCode string    `json:"target_currency_code"`
+	ExchangeRate       float64   `json:"exchange_rate"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
 }
 
 func NewExchangeRateRepository(db *db.Database) ExchangeRateRepository {
@@ -25,14 +35,28 @@ func NewExchangeRateRepository(db *db.Database) ExchangeRateRepository {
 	}
 }
 
-func (er *exchangeRateRepository) UpdateExchangeRates(ctx context.Context, baseCurrency string, rates map[string]float64) error {
-	conn, err := er.db.Pool.Acquire(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to acquire connection: %w", err)
-	}
-	defer conn.Release()
+func (er *exchangeRateRepository) GetExchangeRate(ctx context.Context, baseCurrency string, targetCurrent string) (*ExchangeRateDTO, error) {
+	row, err := er.queries.GetExchangeRate(ctx, database.GetExchangeRateParams{
+		BaseCurrencyCode:   baseCurrency,
+		TargetCurrencyCode: targetCurrent,
+	})
 
-	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get exchange rate %w", err)
+	}
+	exchangeRateDTO := &ExchangeRateDTO{
+		BaseCurrencyCode:   row.BaseCurrencyCode,
+		TargetCurrencyCode: row.TargetCurrencyCode,
+		ExchangeRate:       row.ExchangeRate,
+		CreatedAt:          row.CreatedAt,
+		UpdatedAt:          row.UpdatedAt,
+	}
+	return exchangeRateDTO, nil
+}
+
+func (er *exchangeRateRepository) UpdateExchangeRates(ctx context.Context, baseCurrency string, rates map[string]float64) error {
+
+	tx, err := er.db.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}

@@ -15,7 +15,7 @@ func Run() error {
 		fmt.Println("Failed to load configuration: %v", err)
 	}
 
-	r, cleanup, err := wiring.InitializeRouter(cfg.Database, cfg.APIs)
+	r, cleanup, err := wiring.InitializeRouter(cfg.Database, cfg.APIs, cfg.Redis)
 
 	if err != nil {
 		log.Fatalf("Failed to initialize router: %v", err)

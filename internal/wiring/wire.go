@@ -34,7 +34,7 @@ var ApplicationSet = wire.NewSet(
 	HandlerSet,
 )
 
-func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIKeys) (*gin.Engine, func(), error) {
+func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig, cfgCache configs.CacheConfig) (*gin.Engine, func(), error) {
 	wire.Build(
 		ApplicationSet,
 		router.WireSet,
