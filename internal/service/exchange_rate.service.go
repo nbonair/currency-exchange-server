@@ -16,16 +16,18 @@ type ExchangeRateService interface {
 }
 
 type exchangeRateService struct {
-	repo              repo.ExchangeRateRepository
+	repoExchangeRate  repo.ExchangeRateRepository
+	repoHistory       repo.ExchangeRateHistoryRepository
 	apiClient         openexchangerates.OpenExchangeRateClient
 	exchangeRateCache cache.ExchangeRateCache
 	cacheTTL          time.Duration
 	staleThreshold    time.Duration
 }
 
-func NewExchangeRateService(repo repo.ExchangeRateRepository, apiClient openexchangerates.OpenExchangeRateClient, exchangeRateCache cache.ExchangeRateCache) ExchangeRateService {
+func NewExchangeRateService(repoExchangeRate repo.ExchangeRateRepository, repoHistory repo.ExchangeRateHistoryRepository, apiClient openexchangerates.OpenExchangeRateClient, exchangeRateCache cache.ExchangeRateCache) ExchangeRateService {
 	return &exchangeRateService{
-		repo:              repo,
+		repoExchangeRate:  repoExchangeRate,
+		repoHistory:       repoHistory,
 		apiClient:         apiClient,
 		exchangeRateCache: exchangeRateCache,
 		cacheTTL:          time.Hour * 2,
@@ -48,6 +50,8 @@ func (es *exchangeRateService) FetchLatestRates(ctx context.Context, baseCurrenc
 	if err != nil {
 		return nil, err
 	}
+
+	// Update cache with fresh rates from DB
 	for targetCurrency, rate := range dbRates {
 		cachedRates[targetCurrency] = rate.ExchangeRate
 		if err := es.exchangeRateCache.Set(ctx, baseCurrency, targetCurrency, rate.ExchangeRate, es.cacheTTL); err != nil {
@@ -61,10 +65,16 @@ func (es *exchangeRateService) FetchLatestRates(ctx context.Context, baseCurrenc
 			return nil, err
 		}
 
-		es.repo.UpdateExchangeRates(ctx, baseCurrency, apiRates)
+		es.repoExchangeRate.UpdateExchangeRates(ctx, baseCurrency, apiRates)
 
 		for targetCurrency, rate := range apiRates {
 			cachedRates[targetCurrency] = rate
+			if err := es.exchangeRateCache.Set(ctx, baseCurrency, targetCurrency, rate, es.cacheTTL); err != nil {
+				fmt.Printf("failed to set cache for %s-%s\n", baseCurrency, targetCurrency)
+			}
+			if err := es.repoHistory.InsertRateHistory(ctx, baseCurrency, targetCurrency, rate); err != nil {
+				fmt.Printf("failed to insert history rate for %s-%s\n", baseCurrency, targetCurrency)
+			}
 		}
 	}
 
@@ -93,7 +103,7 @@ func (es *exchangeRateService) getRatesFromDb(ctx context.Context, baseCurrency 
 	dbRates := make(map[string]repo.ExchangeRateDTO)
 	staleCurrencies := []string{}
 	for _, targetCurrency := range targetCurrencies {
-		rate, err := es.repo.GetExchangeRate(ctx, baseCurrency, targetCurrency)
+		rate, err := es.repoExchangeRate.GetExchangeRate(ctx, baseCurrency, targetCurrency)
 		if err != nil {
 			fmt.Printf("database error for %s-%s: %v\n", baseCurrency, targetCurrency, err)
 			staleCurrencies = append(staleCurrencies, targetCurrency)

@@ -30,6 +30,7 @@ func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig, c
 		return nil, nil, err
 	}
 	exchangeRateRepository := repo.NewExchangeRateRepository(database)
+	exchangeRateHistoryRepository := repo.NewExchangeRateHistoryRepository(database)
 	openExchangeRateClient, err := openexchangerates.NewOpenExchangeRateClient(cfgApi)
 	if err != nil {
 		cleanup()
@@ -37,7 +38,7 @@ func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig, c
 	}
 	client := cache.NewRedisClient(cfgCache)
 	exchangeRateCache := cache.NewExchangeRateCache(client)
-	exchangeRateService := service.NewExchangeRateService(exchangeRateRepository, openExchangeRateClient, exchangeRateCache)
+	exchangeRateService := service.NewExchangeRateService(exchangeRateRepository, exchangeRateHistoryRepository, openExchangeRateClient, exchangeRateCache)
 	exchangeRateHandler := handler.NewExchangeRateHandler(exchangeRateService)
 	exchangeRateRouter := rate.NewExchangeRateRouter(exchangeRateHandler)
 	appRouter := router.NewAppRouter(exchangeRateRouter)
@@ -49,7 +50,7 @@ func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig, c
 
 // wire.go:
 
-var RepositorySet = wire.NewSet(dataaccess.WireSet, lib.WireSet, repo.NewExchangeRateRepository)
+var RepositorySet = wire.NewSet(dataaccess.WireSet, lib.WireSet, repo.WireSet)
 
 var ServiceSet = wire.NewSet(service.NewExchangeRateService)
 

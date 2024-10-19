@@ -17,7 +17,7 @@ import (
 var RepositorySet = wire.NewSet(
 	dataaccess.WireSet,
 	lib.WireSet,
-	repo.NewExchangeRateRepository,
+	repo.WireSet,
 )
 
 var ServiceSet = wire.NewSet(

@@ -7,28 +7,27 @@ package database
 
 import (
 	"context"
-	"time"
 )
 
 const insertExchangeRateHistory = `-- name: InsertExchangeRateHistory :exec
 
-INSERT INTO exchange_rate_history(base_currency_id, currency_id, exchange_rate, timestamp)
-VALUES ($1, $2, $3, $4)
+INSERT INTO exchange_rate_history(base_currency_id, currency_id, exchange_rate, timestamp, created_at)
+VALUES (
+    (SELECT id FROM currencies c WHERE $1 = c.code),
+    (SELECT id FROM currencies c WHERE $2 = c.code),
+    $3,
+    NOW(),
+    NOW()
+)
 `
 
 type InsertExchangeRateHistoryParams struct {
-	BaseCurrencyID int32
-	CurrencyID     int32
-	ExchangeRate   float64
-	Timestamp      time.Time
+	BaseCurrencyCode   string
+	TargetCurrencyCode string
+	ExchangeRate       float64
 }
 
 func (q *Queries) InsertExchangeRateHistory(ctx context.Context, arg InsertExchangeRateHistoryParams) error {
-	_, err := q.db.Exec(ctx, insertExchangeRateHistory,
-		arg.BaseCurrencyID,
-		arg.CurrencyID,
-		arg.ExchangeRate,
-		arg.Timestamp,
-	)
+	_, err := q.db.Exec(ctx, insertExchangeRateHistory, arg.BaseCurrencyCode, arg.TargetCurrencyCode, arg.ExchangeRate)
 	return err
 }
