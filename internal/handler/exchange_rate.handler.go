@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/nbonair/currency-exchange-server/internal/service"
+	"github.com/nbonair/currency-exchange-server/internal/utils"
 )
 
 type ExchangeRateHandler interface {
@@ -29,7 +30,7 @@ func (eh *exchangeRateHandler) GetExchangeRates(c *gin.Context) {
 	}
 	baseCurrency := c.Query("base")
 	targetCurrenciesParam := strings.Split(c.Query("targets"), ",")
-	targetCurrencies := uniqueCurrencies(targetCurrenciesParam)
+	targetCurrencies := utils.GetUniqueCurrencies(targetCurrenciesParam)
 
 	rates, err := eh.exchangeRateService.FetchLatestRates(c.Request.Context(), baseCurrency, targetCurrencies)
 	if err != nil {
@@ -41,16 +42,4 @@ func (eh *exchangeRateHandler) GetExchangeRates(c *gin.Context) {
 		"base_currency": baseCurrency,
 		"rates":         rates,
 	})
-}
-
-func uniqueCurrencies(currencies []string) []string {
-	set := make(map[string]struct{})
-	for _, currency := range currencies {
-		set[currency] = struct{}{}
-	}
-	var uniqueCurrencyList []string
-	for currency := range set {
-		uniqueCurrencyList = append(uniqueCurrencyList, currency)
-	}
-	return uniqueCurrencyList
 }
