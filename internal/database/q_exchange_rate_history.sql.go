@@ -7,7 +7,68 @@ package database
 
 import (
 	"context"
+	"time"
 )
+
+const getExchangeRateHistory = `-- name: GetExchangeRateHistory :many
+
+SELECT
+    erh.exchange_rate AS rate,
+    erh.timestamp,
+    bc.code as base_currency_code,
+    tc.code as target_currency_code
+FROM exchange_rate_history erh
+JOIN currencies bc ON erh.base_currency_id = bc.id
+JOIN currencies tc ON erh.base_currency_id = tc.id
+WHERE bc.code = $1
+    AND tc.code = $2
+    AND erh.timestamp BETWEEN $3 AND $4
+ORDER BY erh.timestamp ASC
+`
+
+type GetExchangeRateHistoryParams struct {
+	BaseCurrencyCode   string
+	TargetCurrencyCode string
+	StartTime          time.Time
+	EndTime            time.Time
+}
+
+type GetExchangeRateHistoryRow struct {
+	Rate               float64
+	Timestamp          time.Time
+	BaseCurrencyCode   string
+	TargetCurrencyCode string
+}
+
+func (q *Queries) GetExchangeRateHistory(ctx context.Context, arg GetExchangeRateHistoryParams) ([]GetExchangeRateHistoryRow, error) {
+	rows, err := q.db.Query(ctx, getExchangeRateHistory,
+		arg.BaseCurrencyCode,
+		arg.TargetCurrencyCode,
+		arg.StartTime,
+		arg.EndTime,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetExchangeRateHistoryRow
+	for rows.Next() {
+		var i GetExchangeRateHistoryRow
+		if err := rows.Scan(
+			&i.Rate,
+			&i.Timestamp,
+			&i.BaseCurrencyCode,
+			&i.TargetCurrencyCode,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const insertExchangeRateHistory = `-- name: InsertExchangeRateHistory :exec
 
