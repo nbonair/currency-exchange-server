@@ -11,6 +11,7 @@ import (
 )
 
 type ExchangeRateRepository interface {
+	GetSupportedCurrencies(ctx context.Context) ([]string, error)
 	GetExchangeRate(ctx context.Context, baseCurrency string, targetCurrent string) (*ExchangeRateDTO, error)
 	UpdateExchangeRates(ctx context.Context, baseCurrency string, rates map[string]float64) error
 }
@@ -33,6 +34,18 @@ func NewExchangeRateRepository(db *db.Database) ExchangeRateRepository {
 		db:      db,
 		queries: database.New(db.Pool),
 	}
+}
+
+func (er *exchangeRateRepository) GetSupportedCurrencies(ctx context.Context) ([]string, error) {
+	codes, err := er.queries.GetSupportedCurrencies(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get supported currencies list. Error: %w", err)
+	}
+
+	var supportedCurrencies []string
+	supportedCurrencies = append(supportedCurrencies, codes...)
+
+	return supportedCurrencies, nil
 }
 
 func (er *exchangeRateRepository) GetExchangeRate(ctx context.Context, baseCurrency string, targetCurrent string) (*ExchangeRateDTO, error) {

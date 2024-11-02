@@ -37,8 +37,9 @@ func InitializeRouter(cfgDb configs.DatabaseConfig, cfgApi configs.APIsConfig, c
 		return nil, nil, err
 	}
 	client := cache.NewRedisClient(cfgCache)
+	currenciesCache := cache.NewCurrenciesCache(client)
 	exchangeRateCache := cache.NewExchangeRateCache(client)
-	exchangeRateService := service.NewExchangeRateService(exchangeRateRepository, exchangeRateHistoryRepository, openExchangeRateClient, exchangeRateCache)
+	exchangeRateService := service.NewExchangeRateService(exchangeRateRepository, exchangeRateHistoryRepository, openExchangeRateClient, currenciesCache, exchangeRateCache)
 	exchangeRateHandler := handler.NewExchangeRateHandler(exchangeRateService)
 	exchangeRateRouter := rate.NewExchangeRateRouter(exchangeRateHandler)
 	appRouter := router.NewAppRouter(exchangeRateRouter)

@@ -31,6 +31,32 @@ func (q *Queries) GetPivotIdByCurrencyId(ctx context.Context, currencyID int32) 
 	return id, err
 }
 
+const getSupportedCurrencies = `-- name: GetSupportedCurrencies :many
+SELECT 
+    c.code
+FROM currencies c
+`
+
+func (q *Queries) GetSupportedCurrencies(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, getSupportedCurrencies)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			return nil, err
+		}
+		items = append(items, code)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertCurrency = `-- name: InsertCurrency :exec
 INSERT INTO currencies (code, name, decimal_places, created_at, updated_at)
 VALUES ($1, $2, $3, NOW(), NOW())

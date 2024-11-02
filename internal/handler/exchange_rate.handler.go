@@ -32,6 +32,17 @@ func (eh *exchangeRateHandler) GetExchangeRates(c *gin.Context) {
 	targetCurrenciesParam := strings.Split(c.Query("targets"), ",")
 	targetCurrencies := utils.GetUniqueCurrencies(targetCurrenciesParam)
 
+	areSupported, err := eh.exchangeRateService.AreSupportedCurrencies(c.Request.Context(), targetCurrencies)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !areSupported {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "one or more currencies are unsupported"})
+		return
+	}
+
 	rates, err := eh.exchangeRateService.FetchLatestRates(c.Request.Context(), baseCurrency, targetCurrencies)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

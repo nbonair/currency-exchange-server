@@ -19,6 +19,7 @@ type Client interface {
 	Get(ctx context.Context, key string) (string, error)
 	AddToSet(ctx context.Context, key string, data ...any) error
 	IsDataInSet(ctx context.Context, key string, data any) (bool, error)
+	IsDataInSetMultiple(ctx context.Context, key string, data []any) ([]bool, error)
 }
 
 func NewClient(cfg configs.CacheConfig) (Client, error) {
@@ -71,11 +72,18 @@ func (c *redisClient) AddToSet(ctx context.Context, key string, data ...any) err
 	return nil
 }
 
-// IsDataInSet implements Client.
 func (c *redisClient) IsDataInSet(ctx context.Context, key string, data any) (bool, error) {
 	res, err := c.redisClient.SIsMember(ctx, key, data).Result()
 	if err != nil {
 		return false, fmt.Errorf("failed to check data is member of set inside cache: %w", err)
+	}
+	return res, nil
+}
+
+func (c *redisClient) IsDataInSetMultiple(ctx context.Context, key string, data []any) ([]bool, error) {
+	res, err := c.redisClient.SMIsMember(ctx, key, data...).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to check data is member of set inside cache: %w", err)
 	}
 	return res, nil
 }

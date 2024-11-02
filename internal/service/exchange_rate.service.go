@@ -13,6 +13,7 @@ import (
 
 type ExchangeRateService interface {
 	FetchLatestRates(ctx context.Context, baseCurrency string, targetCurrencies []string) (map[string]float64, error)
+	AreSupportedCurrencies(ctx context.Context, currencies []string) (bool, error)
 }
 
 type exchangeRateService struct {
@@ -20,21 +21,53 @@ type exchangeRateService struct {
 	repoHistory       repo.ExchangeRateHistoryRepository
 	apiClient         openexchangerates.OpenExchangeRateClient
 	exchangeRateCache cache.ExchangeRateCache
+	currenciesCache   cache.CurrenciesCache
 	cacheTTL          time.Duration
 	staleThreshold    time.Duration
 }
 
-func NewExchangeRateService(repoExchangeRate repo.ExchangeRateRepository, repoHistory repo.ExchangeRateHistoryRepository, apiClient openexchangerates.OpenExchangeRateClient, exchangeRateCache cache.ExchangeRateCache) ExchangeRateService {
+func NewExchangeRateService(repoExchangeRate repo.ExchangeRateRepository, repoHistory repo.ExchangeRateHistoryRepository, apiClient openexchangerates.OpenExchangeRateClient, currenciesCache cache.CurrenciesCache, exchangeRateCache cache.ExchangeRateCache) ExchangeRateService {
 	return &exchangeRateService{
 		repoExchangeRate:  repoExchangeRate,
 		repoHistory:       repoHistory,
 		apiClient:         apiClient,
 		exchangeRateCache: exchangeRateCache,
+		currenciesCache:   currenciesCache,
 		cacheTTL:          time.Hour * 2,
 		staleThreshold:    time.Hour * 4,
 	}
 }
 
+// AreSupportedCurrencies implements ExchangeRateService.
+func (es *exchangeRateService) AreSupportedCurrencies(ctx context.Context, currencies []string) (bool, error) {
+	supportedMap, err := es.currenciesCache.HasMultiple(ctx, currencies)
+
+	if err != nil {
+		// Fallback to fetch from database
+		supportedCurrencies, err := es.repoExchangeRate.GetSupportedCurrencies(ctx)
+		if err != nil {
+			return false, err
+		}
+
+		for _, currency := range supportedCurrencies {
+			supportedMap[currency] = true
+			if err := es.currenciesCache.Add(ctx, currency); err != nil {
+				fmt.Printf("failed to update cache for %s. Error: %s", currency, err)
+			}
+		}
+
+	}
+
+	for _, currency := range currencies {
+		if !supportedMap[currency] {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+// FetchLatestRates implements ExchangeRateService.
 func (es *exchangeRateService) FetchLatestRates(ctx context.Context, baseCurrency string, targetCurrencies []string) (map[string]float64, error) {
 	cachedRates, missingCurrencies, err := es.getRatesFromCache(ctx, baseCurrency, targetCurrencies)
 	if err != nil {
