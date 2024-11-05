@@ -8,7 +8,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-//go:embed sql/schema/*.sql
+//go:embed sql/migrations/*.sql
 var embedMigrations embed.FS
 
 // MigrateUp applies all pending migrations.
@@ -19,7 +19,7 @@ func (db *Database) MigrateUp() error {
 	goose.SetBaseFS(embedMigrations)
 	goose.SetDialect("postgres")
 
-	if err := goose.Up(sqlDB, "sql/schema"); err != nil {
+	if err := goose.Up(sqlDB, "sql/migrations"); err != nil {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
 
@@ -34,7 +34,7 @@ func (db *Database) MigrateDown() error {
 	goose.SetBaseFS(embedMigrations)
 	goose.SetDialect("postgres")
 
-	if err := goose.Down(sqlDB, "./sql/schema"); err != nil {
+	if err := goose.Down(sqlDB, "./sql/migrations"); err != nil {
 		return fmt.Errorf("failed to rollback migration: %w", err)
 	}
 
