@@ -11,6 +11,7 @@ import (
 
 type ExchangeRateHandler interface {
 	GetExchangeRates(c *gin.Context)
+	GetExchangeRateHistory(c *gin.Context)
 }
 
 type exchangeRateHandler struct {
@@ -53,4 +54,9 @@ func (eh *exchangeRateHandler) GetExchangeRates(c *gin.Context) {
 		"base_currency": baseCurrency,
 		"rates":         rates,
 	})
+}
+
+// GetExchangeRateHistory implements ExchangeRateHandler.
+func (eh *exchangeRateHandler) GetExchangeRateHistory(c *gin.Context) {
+	panic("unimplemented")
 }

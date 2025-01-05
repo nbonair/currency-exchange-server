@@ -54,7 +54,14 @@ func (c *currenciesCache) HasMultiple(ctx context.Context, currencies []string) 
 
 	supportedMap := make(map[string]bool, len(currencies))
 	for i, currency := range currencies {
-		supportedMap[currency] = result[i]
+		// Return error if found unsupported currency in cache
+		if !result[i] {
+			return nil, fmt.Errorf("currency not supported in cache")
+		} else {
+			supportedMap[currency] = result[i]
+
+		}
+
 	}
 
 	return supportedMap, nil

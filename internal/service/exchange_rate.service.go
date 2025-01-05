@@ -40,22 +40,24 @@ func NewExchangeRateService(repoExchangeRate repo.ExchangeRateRepository, repoHi
 
 // AreSupportedCurrencies implements ExchangeRateService.
 func (es *exchangeRateService) AreSupportedCurrencies(ctx context.Context, currencies []string) (bool, error) {
+	// Get supported list from cache
 	supportedMap, err := es.currenciesCache.HasMultiple(ctx, currencies)
-
 	if err != nil {
+		fmt.Printf("Cache error: %v\n", err)
+		supportedMap = make(map[string]bool)
 		// Fallback to fetch from database
 		supportedCurrencies, err := es.repoExchangeRate.GetSupportedCurrencies(ctx)
 		if err != nil {
 			return false, err
 		}
 
+		// Update supported list to cache
 		for _, currency := range supportedCurrencies {
 			supportedMap[currency] = true
 			if err := es.currenciesCache.Add(ctx, currency); err != nil {
 				fmt.Printf("failed to update cache for %s. Error: %s", currency, err)
 			}
 		}
-
 	}
 
 	for _, currency := range currencies {
